@@ -40,6 +40,22 @@ const SOURCES = [
     baseUrl: null,
     trustLevel: "official",
   },
+  // Registros comunitarios de personas desaparecidas (meta-buscador). NUNCA
+  // "official": son fuentes comunitarias sin verificar (community_pending).
+  {
+    name: "Venezuela Te Busca",
+    type: "missing_persons",
+    country: "VE",
+    baseUrl: "https://venezuelatebusca.com/",
+    trustLevel: "community_pending",
+  },
+  {
+    name: "Encuéntralos",
+    type: "missing_persons",
+    country: "VE",
+    baseUrl: "https://encuentralos.tecnosoft.dev/",
+    trustLevel: "community_pending",
+  },
 ] as const;
 
 async function main(): Promise<void> {

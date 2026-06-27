@@ -3,6 +3,7 @@
   import type { CitizenReportDTO } from "@sismicaid/shared";
   import { getReports } from "../lib/api";
   import { fetchWithCache } from "../lib/cache";
+  import { link } from "../lib/links";
   import { VENEZUELA_STATES } from "../lib/venezuela";
   import { helpReportsQuery } from "../lib/reportGroups";
   import ReportCard from "./ReportCard.svelte";
@@ -26,6 +27,14 @@
     }
   });
 </script>
+
+<a class="people-cta" href={link("/buscar-personas")}>
+  <span class="ico" aria-hidden="true">⌕</span>
+  <span class="txt">
+    <strong>¿Buscas a un familiar?</strong>
+    <span>Busca por nombre en registros de personas desaparecidas</span>
+  </span>
+</a>
 
 {#if offline}
   <p class="offline">Sin conexión. Mostrando últimos datos guardados.</p>
@@ -85,6 +94,37 @@
     padding: var(--space-2) var(--space-3);
     font-size: var(--font-sm);
     margin-bottom: var(--space-3);
+  }
+  .people-cta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    min-height: 56px;
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius-lg);
+    color: var(--color-text);
+    text-decoration: none;
+    box-shadow: var(--shadow-soft);
+  }
+  .people-cta .ico {
+    font-size: var(--font-xl);
+    line-height: 1;
+    color: var(--color-primary);
+  }
+  .people-cta .txt {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .people-cta strong {
+    color: var(--color-primary);
+  }
+  .people-cta .txt span {
+    font-size: var(--font-sm);
+    color: var(--color-text-muted);
   }
   .muted {
     color: var(--color-text-soft);

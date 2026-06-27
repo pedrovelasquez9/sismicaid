@@ -1,6 +1,7 @@
 import type {
   CurrentTsunamiDTO,
   CitizenReportDTO,
+  MissingPersonSearchResponseDTO,
   NeedDTO,
   RecommendationDTO,
   ResourceDTO,
@@ -74,4 +75,8 @@ export function getReports(query = ""): Promise<CitizenReportDTO[]> {
 
 export function getTrappedPersons(): Promise<TrappedPersonMarkerDTO[]> {
   return apiGet<TrappedPersonMarkerDTO[]>("/api/trapped-persons");
+}
+
+export function searchMissingPersons(q: string): Promise<MissingPersonSearchResponseDTO> {
+  return apiGet<MissingPersonSearchResponseDTO>(`/api/missing-persons?q=${encodeURIComponent(q)}`);
 }

@@ -103,6 +103,14 @@
     </span>
   </a>
 
+  <a class="people-cta" href={link("/buscar-personas")}>
+    <span class="ico" aria-hidden="true">⌕</span>
+    <span class="txt">
+      <strong>Buscar personas</strong>
+      <span>Encuentra a un familiar en los registros de desaparecidos</span>
+    </span>
+  </a>
+
   <section class="summary">
     <div class="head">
       <h2>Resumen sísmico</h2>
@@ -124,6 +132,7 @@
     <a href={link("/sismos")}>Mapa sísmico</a>
     <a href={link("/ayuda")}>Ayuda cercana</a>
     <a href={link("/rescate")}>Personas atrapadas</a>
+    <a href={link("/buscar-personas")}>Buscar personas</a>
     <a href={link("/reportar")}>Reportar</a>
     <a href={link("/recomendaciones")}>Recomendaciones</a>
   </nav>
@@ -158,6 +167,38 @@
   .emergency-cta .txt span {
     font-size: var(--font-sm);
     opacity: 0.95;
+  }
+  .people-cta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-top: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    min-height: 64px;
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-primary);
+    color: var(--color-text);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    box-shadow: var(--shadow-soft);
+  }
+  .people-cta .ico {
+    font-size: var(--font-2xl);
+    line-height: 1;
+    color: var(--color-primary);
+  }
+  .people-cta .txt {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .people-cta strong {
+    font-size: var(--font-lg);
+    color: var(--color-primary);
+  }
+  .people-cta .txt span {
+    font-size: var(--font-sm);
+    color: var(--color-text-muted);
   }
   .summary {
     margin-top: var(--space-5);
