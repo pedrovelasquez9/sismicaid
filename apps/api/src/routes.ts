@@ -8,6 +8,7 @@ import { createReportSchema } from "./validation/report";
 import { isResourceType, listResources } from "./services/resources";
 import { listNeeds } from "./services/needs";
 import { listTrappedPersons, resolveTrappedPerson } from "./services/trapped-persons";
+import { searchMissingPersons } from "./services/missing-persons";
 
 // Rutas públicas de docs/API.md (todas implementadas en el MVP).
 
@@ -91,4 +92,13 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     const q = req.query as Record<string, string | undefined>;
     return listNeeds({ state: q.state || undefined, category: q.category || undefined });
   });
+
+  // Meta-buscador de personas desaparecidas. Solo lectura, reactivo (requiere ?q=).
+  // Rate-limit 30/min (más holgado que reportes: un buscador hace varias consultas).
+  // El input se sanea y solo llega a Prisma como `contains` parametrizado.
+  app.get(
+    "/api/missing-persons",
+    { config: { rateLimit: { max: 30, timeWindow: "1 minute" } } },
+    async (req) => searchMissingPersons((req.query as Record<string, string | undefined>).q ?? ""),
+  );
 }

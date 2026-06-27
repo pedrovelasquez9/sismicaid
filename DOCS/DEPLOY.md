@@ -49,12 +49,18 @@ CORS_ORIGIN=https://TU_DOMINIO   # opcional si mismo origen; recomendable fijarl
 
 ```bash
 cd /var/www/sismicaid
-pnpm --filter @sismicaid/api exec prisma migrate deploy   # crea las 9 tablas
+pnpm --filter @sismicaid/api exec prisma migrate deploy   # crea las 10 tablas
 pnpm --filter @sismicaid/api seed:sources
 pnpm --filter @sismicaid/api seed:coastal-zones
 pnpm --filter @sismicaid/api seed:recommendations
 pnpm --filter @sismicaid/api fetch:usgs                   # datos sísmicos reales
 pnpm --filter @sismicaid/api fetch:ptwc                   # estado tsunami
+
+# Búsqueda de personas (registros comunitarios) — primer sync.
+# En producción usa un tope alto para un sync COMPLETO: es necesario para la
+# detección de bajas/stale (S6); un run capado omite el barrido a propósito.
+VTB_MAX_PAGES=2000 pnpm --filter @sismicaid/api fetch:venezuelatebusca
+ENC_MAX_PAGES=2000 pnpm --filter @sismicaid/api fetch:encuentralos
 ```
 
 ## 5. La API como servicio (systemd)
@@ -95,7 +101,17 @@ Los jobs de fetch deben correr periódicamente. `crontab -e`:
 ```cron
 */10 * * * * cd /var/www/sismicaid && /usr/bin/pnpm --filter @sismicaid/api fetch:usgs >> /var/log/ltt-fetch.log 2>&1
 */10 * * * * cd /var/www/sismicaid && /usr/bin/pnpm --filter @sismicaid/api fetch:ptwc >> /var/log/ltt-fetch.log 2>&1
+*/30 * * * * cd /var/www/sismicaid && VTB_MAX_PAGES=2000 /usr/bin/pnpm --filter @sismicaid/api fetch:venezuelatebusca >> /var/log/ltt-fetch.log 2>&1
+*/30 * * * * cd /var/www/sismicaid && ENC_MAX_PAGES=2000 /usr/bin/pnpm --filter @sismicaid/api fetch:encuentralos >> /var/log/ltt-fetch.log 2>&1
 ```
+
+> Búsqueda de personas: los dos jobs corren cada 30 min (más suave que los sísmicos).
+> `VTB_MAX_PAGES` / `ENC_MAX_PAGES` deben ir altos (~2000) para un sync **completo**:
+> el barrido de bajas (stale + purga a 30 días) solo se ejecuta tras un sync completo;
+> un run capado lo omite a propósito para no marcar como ausentes a decenas de miles
+> de registros que no se alcanzaron a leer. La purga de registros viejos es un paso
+> dentro del propio job (sin infraestructura extra). Solo `fetch` nativo: **sin Docker
+> ni navegador headless** en producción.
 
 ## 7. Construir el frontend
 

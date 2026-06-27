@@ -7,8 +7,13 @@
 export const TRUST_LEVEL = ["official", "verified", "community_pending", "outdated", "rejected"] as const;
 export type TrustLevel = (typeof TRUST_LEVEL)[number];
 
-export const SOURCE_TYPE = ["seismic", "tsunami", "civil_protection", "media", "manual"] as const;
+export const SOURCE_TYPE = ["seismic", "tsunami", "civil_protection", "media", "manual", "missing_persons"] as const;
 export type SourceType = (typeof SOURCE_TYPE)[number];
+
+// Estado de un reporte de persona desaparecida. Solo 3 valores (sin "deceased");
+// el vocabulario de cada fuente se mapea a estos en los mappers.
+export const MISSING_PERSON_STATUS = ["missing", "found", "hospitalized"] as const;
+export type MissingPersonStatus = (typeof MISSING_PERSON_STATUS)[number];
 
 export const SOURCE_STATUS = ["active", "degraded", "disabled"] as const;
 export type SourceStatus = (typeof SOURCE_STATUS)[number];

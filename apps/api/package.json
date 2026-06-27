@@ -17,6 +17,8 @@
     "seed:recommendations": "tsx prisma/seed-recommendations.ts",
     "fetch:usgs": "tsx src/jobs/fetch-usgs.ts",
     "fetch:ptwc": "tsx src/jobs/fetch-ptwc.ts",
+    "fetch:venezuelatebusca": "tsx src/jobs/fetch-venezuelatebusca.ts",
+    "fetch:encuentralos": "tsx src/jobs/fetch-encuentralos.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

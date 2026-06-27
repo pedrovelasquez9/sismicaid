@@ -8,6 +8,7 @@ import type {
   CoastalRiskLevel,
   EventType,
   LocationPrecision,
+  MissingPersonStatus,
   NeedStatus,
   RecommendationContext,
   ReportSourceType,
@@ -178,6 +179,47 @@ export interface SourceStatusDTO {
   status: SourceStatus;
   trustLevel: TrustLevel;
   lastCheckedAt: string | null;
+}
+
+// --- Meta-buscador de personas (GET /api/missing-persons?q=) ---
+// Resultado individual de una persona reportada. Frontera segura: la edad exacta
+// de menores NUNCA se expone (age=null + ageLabel="menor de edad"); cada
+// resultado lleva fuente + deep link + trustLevel community_pending + verified=false.
+export interface MissingPersonResultDTO {
+  id: string;
+  fullName: string;
+  age: number | null; // null cuando es menor o se desconoce
+  ageLabel: string | null; // "menor de edad" | "34 años" | null
+  isMinor: boolean;
+  gender: string | null;
+  lastSeenLocation: string | null;
+  status: MissingPersonStatus;
+  hospitalName: string | null;
+  healthStatus: string | null; // prueba de vida / condición
+  foundBy: string | null;
+  description: string | null;
+  source: string; // nombre de la fuente (badge)
+  sourceUrl: string; // deep link (OBLIGATORIO, atribución)
+  reportedAt: string | null; // ISO
+  lastSeenAt: string; // ISO (frescura)
+  trustLevel: TrustLevel; // siempre "community_pending" en v1
+  verified: boolean; // siempre false en v1
+}
+
+// Grupo de resultados con el mismo nombre normalizado. NUNCA fusiona filas:
+// possibleSamePerson es solo una pista suave.
+export interface MissingPersonGroupDTO {
+  normalizedName: string;
+  displayName: string;
+  results: MissingPersonResultDTO[];
+  possibleSamePerson: boolean;
+}
+
+export interface MissingPersonSearchResponseDTO {
+  query: string;
+  groups: MissingPersonGroupDTO[];
+  total: number; // total de filas de resultado
+  truncated: boolean; // se alcanzó el tope take()
 }
 
 // GET /api/status — estado general honesto (sin inventar datos oficiales).

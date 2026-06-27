@@ -30,6 +30,13 @@ enum SourceType {
   civil_protection
   media
   manual
+  missing_persons
+}
+
+enum MissingPersonStatus {
+  missing
+  found
+  hospitalized
 }
 
 enum SourceStatus {
@@ -199,10 +206,11 @@ model OfficialSource {
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")
 
-  seismicEvents SeismicEvent[]
-  tsunamiAlerts TsunamiAlert[]
-  resources     Resource[]
-  needs         Need[]
+  seismicEvents        SeismicEvent[]
+  tsunamiAlerts        TsunamiAlert[]
+  resources            Resource[]
+  needs                Need[]
+  missingPersonReports MissingPersonReport[]
 
   @@map("official_sources")
 }
@@ -400,4 +408,46 @@ model FetchRun {
   @@index([sourceId])
   @@index([jobName])
   @@map("fetch_runs")
+}
+
+// Reporte de persona desaparecida agregado de registros comunitarios públicos
+// (meta-buscador de personas). PII minimizada deliberadamente: NUNCA persiste
+// cédula/idNumber, foto, contacto del reportante/buscador, GPS exacto ni
+// rawPayload (rompe a propósito la convención de rawPayload para no re-introducir
+// PII ya removida en el mapper puro). La edad exacta de menores se enmascara en
+// ingesta (age = null cuando isMinor). Ver docs/SECURITY_AND_PRIVACY.md.
+model MissingPersonReport {
+  id               String              @id @default(uuid()) @db.Uuid
+  sourceId         String?             @map("source_id") @db.Uuid
+  source           OfficialSource?     @relation(fields: [sourceId], references: [id])
+  sourceName       String              @map("source_name")
+  externalId       String              @map("external_id")
+  fullName         String              @map("full_name")
+  normalizedName   String              @map("normalized_name")
+  age              Int?
+  isMinor          Boolean             @default(false) @map("is_minor")
+  gender           String?
+  lastSeenLocation String?             @map("last_seen_location")
+  lastSeenState    String?             @map("last_seen_state")
+  status           MissingPersonStatus @default(missing)
+  hospitalName     String?             @map("hospital_name")
+  healthStatus     String?             @map("health_status")
+  foundBy          String?             @map("found_by")
+  description      String?
+  sourceUrl        String              @map("source_url")
+  reportedAt       DateTime?           @map("reported_at")
+  firstSeenAt      DateTime            @default(now()) @map("first_seen_at")
+  lastSeenAt       DateTime            @default(now()) @map("last_seen_at")
+  missedRuns       Int                 @default(0) @map("missed_runs")
+  stale            Boolean             @default(false)
+  staleSince       DateTime?           @map("stale_since")
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @updatedAt @map("updated_at")
+
+  @@unique([sourceId, externalId])
+  @@index([normalizedName])
+  @@index([status])
+  @@index([stale])
+  @@index([sourceId])
+  @@map("missing_person_reports")
 }

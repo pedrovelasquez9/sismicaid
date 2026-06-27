@@ -8,6 +8,7 @@ import {
   EVENT_TYPE,
   FETCH_STATUS,
   LOCATION_PRECISION,
+  MISSING_PERSON_STATUS,
   NEED_STATUS,
   RECOMMENDATION_CONTEXT,
   REPORT_SOURCE_TYPE,
@@ -55,6 +56,7 @@ const pairs: Array<[string, readonly string[]]> = [
   ["ReportVerificationStatus", REPORT_VERIFICATION_STATUS],
   ["RecommendationContext", RECOMMENDATION_CONTEXT],
   ["FetchStatus", FETCH_STATUS],
+  ["MissingPersonStatus", MISSING_PERSON_STATUS],
 ];
 
 for (const [name, shared] of pairs) {
