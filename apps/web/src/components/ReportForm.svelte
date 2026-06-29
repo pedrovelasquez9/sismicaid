@@ -253,6 +253,11 @@
         <div><dt>Urgencia</dt><dd>{URGENCIES.find((u) => u.value === urgency)?.label ?? "—"}</dd></div>
       </dl>
       <p class="note">Se publicará de inmediato como ciudadano/no verificado. No publiques datos personales de terceros.</p>
+      <p class="disclaimer">
+        Los datos que registras son tu responsabilidad y se publican tal cual,
+        incluida la ubicación. Reporta <strong>solo emergencias reales</strong>:
+        un reporte falso desvía a los rescatistas de quien sí lo necesita.
+      </p>
       {#if errorMsg}<p class="error">{errorMsg}</p>{/if}
     </fieldset>
   {/if}
@@ -403,6 +408,15 @@
   .error {
     color: var(--color-danger);
     font-size: var(--font-sm);
+    margin: 0;
+  }
+  .disclaimer {
+    background: var(--color-surface);
+    border-left: 4px solid var(--color-warning);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    font-size: var(--font-sm);
+    color: var(--color-text-muted);
     margin: 0;
   }
   .review {
