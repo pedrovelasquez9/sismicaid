@@ -41,6 +41,12 @@ test("no incluye campos privados ni coordenadas exactas", () => {
   assert.equal("description" in dto, false);
 });
 
+test("sin coordenadas: approxLat/approxLng son null (aparece en lista, no en mapa)", () => {
+  const dto = toMarkerDTO({ ...base, latitude: null, longitude: null } as unknown as CitizenReport);
+  assert.equal(dto.approxLat, null);
+  assert.equal(dto.approxLng, null);
+});
+
 test("resolved deriva de resolvedAt", () => {
   assert.equal(toMarkerDTO(base).resolved, false);
   assert.equal(toMarkerDTO({ ...base, resolvedAt: new Date() }).resolved, true);

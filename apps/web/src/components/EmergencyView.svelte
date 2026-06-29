@@ -1,6 +1,7 @@
 <script lang="ts">
   import { EMERGENCY_NUMBERS } from "../lib/emergency";
   import { VENEZUELA_STATES } from "../lib/venezuela";
+  import { getCurrentLocation } from "../lib/geolocation";
 
   // "Estoy a salvo": arma un mensaje en el dispositivo y lo comparte por
   // WhatsApp / copiado. NO se guarda nada en ningún servidor (privacidad:
@@ -9,15 +10,26 @@
   let state = "";
   let municipality = "";
   let copied = false;
+  // Ubicación actual (opt-in): el usuario comparte SU propia ubicación con su
+  // familia. No se guarda en ningún servidor.
+  let coords: { lat: number; lng: number } | null = null;
+  let geoState: "idle" | "loading" | "ok" | "denied" = "idle";
 
   $: place = [state, municipality.trim()].filter(Boolean).join(", ");
-  $: message = buildMessage(name.trim(), place);
+  $: message = buildMessage(name.trim(), place, coords);
 
-  function buildMessage(n: string, p: string): string {
+  function buildMessage(n: string, p: string, c: { lat: number; lng: number } | null): string {
     const time = new Date().toLocaleString("es-VE", { dateStyle: "short", timeStyle: "short" });
     const who = n ? `${n}: estoy` : "Estoy";
     const where = p ? ` Ubicación aproximada: ${p}.` : "";
-    return `✅ ${who} a salvo.${where} ${time}. — enviado con Sismicaid`;
+    const link = c ? ` Mi ubicación: https://maps.google.com/?q=${c.lat},${c.lng}.` : "";
+    return `✅ ${who} a salvo.${where}${link} ${time}. — enviado con Sismicaid`;
+  }
+
+  async function useMyLocation() {
+    geoState = "loading";
+    coords = await getCurrentLocation();
+    geoState = coords ? "ok" : "denied";
   }
 
   $: waLink = `https://wa.me/?text=${encodeURIComponent(message)}`;
@@ -78,6 +90,13 @@
       <input type="text" bind:value={municipality} placeholder="Ej: Maiquetía" maxlength="60" />
     </label>
   </div>
+
+  <button type="button" class="button-secondary geo" on:click={useMyLocation} disabled={geoState === "loading"}>
+    {geoState === "loading" ? "Obteniendo ubicación..." : geoState === "ok" ? "Ubicación añadida ✓" : "Usar mi ubicación actual"}
+  </button>
+  {#if geoState === "denied"}
+    <p class="hint">No se pudo obtener la ubicación. Puedes indicar el estado y municipio arriba.</p>
+  {/if}
 
   <p class="preview" aria-live="polite">{message}</p>
 
@@ -194,6 +213,13 @@
     background: var(--color-surface-raised);
     color: var(--color-text);
     border-color: var(--color-border);
+  }
+  .geo {
+    width: 100%;
+    margin-bottom: var(--space-3);
+  }
+  .geo:disabled {
+    opacity: 0.6;
   }
   @media (min-width: 768px) {
     .row {

@@ -8,8 +8,8 @@ import { roundToGrid } from "../lib/geo";
 export function toMarkerDTO(r: CitizenReport): TrappedPersonMarkerDTO {
   return {
     id: r.id,
-    approxLat: roundToGrid(r.latitude as number),
-    approxLng: roundToGrid(r.longitude as number),
+    approxLat: r.latitude == null ? null : roundToGrid(r.latitude as number),
+    approxLng: r.longitude == null ? null : roundToGrid(r.longitude as number),
     municipality: r.municipality,
     urgency: r.urgency,
     verificationStatus: r.verificationStatus,
@@ -25,8 +25,9 @@ export async function listTrappedPersons(): Promise<TrappedPersonMarkerDTO[]> {
     where: {
       reportType: "trapped_person",
       verificationStatus: { notIn: ["rejected", "duplicate"] },
-      latitude: { not: null },
-      longitude: { not: null },
+      // Incluye reportes sin coordenadas: aparecen en la lista (el mapa los
+      // omite). Antes se excluían y nunca se veían, porque el formulario no
+      // capturaba ubicación.
     },
     orderBy: { createdAt: "desc" },
     take: 200,

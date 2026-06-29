@@ -163,8 +163,10 @@ export interface CitizenReportDTO {
 // vienen redondeadas a rejilla (~1 km) por el servidor. Nunca nombres ni contacto.
 export interface TrappedPersonMarkerDTO {
   id: string;
-  approxLat: number;
-  approxLng: number;
+  // null cuando el reporte no trae coordenadas: aparece en la lista pero no
+  // se pinta en el mapa (no inventamos ubicación).
+  approxLat: number | null;
+  approxLng: number | null;
   municipality: string | null;
   urgency: Urgency;
   verificationStatus: ReportVerificationStatus;

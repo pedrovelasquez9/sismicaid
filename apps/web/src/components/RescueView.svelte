@@ -23,7 +23,8 @@
 
   function estado(m: TrappedPersonMarkerDTO): string {
     if (m.resolved) return "Rescatado";
-    return m.verificationStatus === "verified" ? "Verificado" : "Sin verificar";
+    const base = m.verificationStatus === "verified" ? "Verificado" : "Sin verificar";
+    return m.approxLat == null ? `${base} · Sin ubicación en mapa` : base;
   }
 
   onMount(async () => {

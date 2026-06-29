@@ -24,6 +24,7 @@
     if (layer) layer.remove();
     const lg = leaflet.layerGroup();
     for (const m of markers) {
+      if (m.approxLat == null || m.approxLng == null) continue; // sin coords: solo en lista
       const color = URGENCY_HEX[m.urgency];
       const unverified = m.verificationStatus !== "verified";
       const circle = leaflet.circle([m.approxLat, m.approxLng], {
