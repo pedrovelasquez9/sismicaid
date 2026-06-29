@@ -27,10 +27,10 @@ const base = {
   updatedAt: new Date("2026-06-26T12:00:00Z"),
 } as unknown as CitizenReport;
 
-test("difumina las coordenadas (no expone las exactas)", () => {
+test("expone las coordenadas exactas (rescate necesita el sitio preciso)", () => {
   const dto = toMarkerDTO(base);
-  assert.equal(dto.approxLat, 10.61);
-  assert.equal(dto.approxLng, -66.92);
+  assert.equal(dto.lat, 10.612345);
+  assert.equal(dto.lng, -66.918765);
 });
 
 test("no incluye campos privados ni coordenadas exactas", () => {
@@ -43,8 +43,8 @@ test("no incluye campos privados ni coordenadas exactas", () => {
 
 test("sin coordenadas: approxLat/approxLng son null (aparece en lista, no en mapa)", () => {
   const dto = toMarkerDTO({ ...base, latitude: null, longitude: null } as unknown as CitizenReport);
-  assert.equal(dto.approxLat, null);
-  assert.equal(dto.approxLng, null);
+  assert.equal(dto.lat, null);
+  assert.equal(dto.lng, null);
 });
 
 test("resolved deriva de resolvedAt", () => {

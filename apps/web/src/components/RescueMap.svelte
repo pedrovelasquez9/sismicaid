@@ -24,11 +24,11 @@
     if (layer) layer.remove();
     const lg = leaflet.layerGroup();
     for (const m of markers) {
-      if (m.approxLat == null || m.approxLng == null) continue; // sin coords: solo en lista
+      if (m.lat == null || m.lng == null) continue; // sin coords: solo en lista
       const color = URGENCY_HEX[m.urgency];
       const unverified = m.verificationStatus !== "verified";
-      const circle = leaflet.circle([m.approxLat, m.approxLng], {
-        radius: 1000, // metros: comunica que es una ZONA aproximada, no un punto
+      const circle = leaflet.circle([m.lat, m.lng], {
+        radius: 120, // metros: marca el sitio exacto del reporte, no una zona
         color,
         fillColor: color,
         fillOpacity: m.resolved ? 0.08 : 0.25,
