@@ -1,0 +1,191 @@
+---
+import Base from "../layouts/Base.astro";
+import { link } from "../lib/links";
+
+// ponytail: contactos curados a mano. El dueño debe confirmar/ampliar los
+// canales locales vigentes (no inventamos datos oficiales). Solo se enlazan
+// URLs verificables; el resto va por nombre con una nota para ubicar el canal.
+const CHANNELS: Array<{ name: string; desc: string; url?: string; note?: string }> = [
+  {
+    name: "CICR — Restablecimiento del Contacto entre Familiares (RCF)",
+    desc: "Programa internacional de búsqueda y reunificación familiar (Trace the Face). Maneja los datos de forma confidencial.",
+    url: "https://familylinks.icrc.org",
+  },
+  {
+    name: "UNICEF Venezuela",
+    desc: "Protección de la niñez y adolescencia; protocolos de menores no acompañados.",
+    url: "https://www.unicef.org/venezuela",
+  },
+  {
+    name: "Cruz Roja Venezolana",
+    desc: "Apoyo humanitario y RCF a nivel nacional.",
+    note: "Ubica la seccional de tu estado y su canal oficial vigente.",
+  },
+  {
+    name: "CICPC",
+    desc: "Denuncia formal de personas desaparecidas.",
+    note: "Acude a la sede o al canal oficial vigente del CICPC.",
+  },
+  {
+    name: "Consejo de Protección de Niños, Niñas y Adolescentes",
+    desc: "Órgano local de protección de menores; interviene en resguardo y reunificación.",
+    note: "Ubica el consejo de protección de tu municipio.",
+  },
+];
+---
+
+<Base title="Personas desaparecidas · SismicAid">
+  <main>
+    <header>
+      <a href={link("/")} class="back">← Inicio</a>
+      <h1>Personas desaparecidas y reunificación</h1>
+      <p class="lead">Cómo buscar o reportar de forma segura, sin poner en riesgo a menores.</p>
+    </header>
+
+    <section class="warn">
+      <h2>Por qué aquí no publicamos fotos ni datos de menores</h2>
+      <p>
+        Publicar fotos, nombres o señas de niños rescatados es peligroso: le da a un
+        depredador justo lo que necesita para hacerse pasar por familiar y reclamarlos.
+        Por eso la reunificación de menores se maneja por <strong>canales oficiales y
+        confidenciales</strong>, no por tableros abiertos.
+      </p>
+      <p class="strong">
+        Nunca entregues a un niño a alguien solo porque dice ser familiar. Apóyate en
+        un consejo de protección, la Cruz Roja o el CICPC para verificar el vínculo.
+      </p>
+    </section>
+
+    <section>
+      <h2>Canales oficiales de búsqueda y reunificación</h2>
+      <p class="note">Verifica siempre los datos en el canal oficial: esta lista puede desactualizarse.</p>
+      <ul class="channels">
+        {
+          CHANNELS.map((c) => (
+            <li>
+              <div class="ch-head">
+                {c.url ? (
+                  <a href={c.url} target="_blank" rel="noopener noreferrer">{c.name}</a>
+                ) : (
+                  <span class="ch-name">{c.name}</span>
+                )}
+              </div>
+              <p class="ch-desc">{c.desc}</p>
+              {c.note && <p class="ch-note">{c.note}</p>}
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="guide">
+      <h2>Si encontraste a un menor no acompañado</h2>
+      <ul>
+        <li>Mantenlo a salvo y acompañado mientras buscas a una autoridad.</li>
+        <li>Contacta a un consejo de protección, la Cruz Roja o el CICPC.</li>
+        <li>No publiques su foto, nombre ni ubicación exacta en redes ni en esta app.</li>
+        <li>Anota señas para los canales oficiales, no para difundirlas públicamente.</li>
+      </ul>
+    </section>
+
+    <section class="guide">
+      <h2>Si buscas a un familiar</h2>
+      <ul>
+        <li>Usa los canales oficiales de arriba: tienen tu caso protegido y verifican identidades.</li>
+        <li>Desconfía de quien te pida dinero o datos a cambio de "información".</li>
+        <li>Guarda fotos y datos para entregarlos al canal oficial, no para publicarlos.</li>
+      </ul>
+    </section>
+  </main>
+</Base>
+
+<style>
+  main {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: var(--space-5) var(--space-4) var(--space-8);
+  }
+  header {
+    margin-bottom: var(--space-6);
+  }
+  .back {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-size: var(--font-sm);
+  }
+  h1 {
+    font-size: var(--font-2xl);
+    margin: var(--space-2) 0 var(--space-1);
+  }
+  .lead {
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+  section {
+    margin-top: var(--space-6);
+  }
+  h2 {
+    font-size: var(--font-xl);
+    margin: 0 0 var(--space-3);
+  }
+  .warn {
+    background: var(--color-surface);
+    border-left: 4px solid var(--color-warning);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+  }
+  .warn p {
+    margin: 0 0 var(--space-2);
+    color: var(--color-text-muted);
+  }
+  .warn .strong {
+    color: var(--color-text);
+    font-weight: 600;
+    margin-bottom: 0;
+  }
+  .note {
+    font-size: var(--font-sm);
+    color: var(--color-text-soft);
+    margin: 0 0 var(--space-3);
+  }
+  .channels {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-3);
+  }
+  .channels li {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+  }
+  .ch-head a,
+  .ch-name {
+    font-size: var(--font-md);
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+  .ch-name {
+    color: var(--color-text);
+  }
+  .ch-desc {
+    margin: var(--space-1) 0 0;
+    color: var(--color-text-muted);
+    font-size: var(--font-sm);
+  }
+  .ch-note {
+    margin: var(--space-1) 0 0;
+    color: var(--color-text-soft);
+    font-size: var(--font-sm);
+  }
+  .guide ul {
+    margin: 0;
+    padding-left: var(--space-5);
+    display: grid;
+    gap: var(--space-2);
+    color: var(--color-text-muted);
+  }
+</style>
