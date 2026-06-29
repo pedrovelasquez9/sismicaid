@@ -27,13 +27,14 @@ const base = {
   updatedAt: new Date("2026-06-26T12:00:00Z"),
 } as unknown as CitizenReport;
 
-test("expone las coordenadas exactas (rescate necesita el sitio preciso)", () => {
+test("devuelve las coordenadas guardadas y la precisión (el difuminado ocurre al guardar)", () => {
   const dto = toMarkerDTO(base);
   assert.equal(dto.lat, 10.612345);
   assert.equal(dto.lng, -66.918765);
+  assert.equal(dto.locationPrecision, "approximate");
 });
 
-test("no incluye campos privados ni coordenadas exactas", () => {
+test("no incluye campos privados ni la entidad cruda", () => {
   const dto = toMarkerDTO(base) as unknown as Record<string, unknown>;
   assert.equal("latitude" in dto, false);
   assert.equal("longitude" in dto, false);
@@ -41,7 +42,7 @@ test("no incluye campos privados ni coordenadas exactas", () => {
   assert.equal("description" in dto, false);
 });
 
-test("sin coordenadas: approxLat/approxLng son null (aparece en lista, no en mapa)", () => {
+test("sin coordenadas: lat/lng son null (aparece en lista, no en mapa)", () => {
   const dto = toMarkerDTO({ ...base, latitude: null, longitude: null } as unknown as CitizenReport);
   assert.equal(dto.lat, null);
   assert.equal(dto.lng, null);

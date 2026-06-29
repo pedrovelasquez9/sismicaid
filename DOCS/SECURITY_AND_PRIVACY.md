@@ -3,7 +3,7 @@
 ## Reglas críticas
 
 - No exponer contacto privado.
-- No exponer direcciones privadas exactas, salvo la excepción de personas atrapadas (ver abajo).
+- No exponer direcciones privadas exactas por defecto; solo cuando el reportante lo elige explícitamente (ver abajo).
 - No publicar nombres de víctimas.
 - No publicar datos de menores.
 - No publicar fotos sin moderación si contienen datos sensibles.
@@ -13,26 +13,31 @@
 - Todo reporte ciudadano entra como `pending`.
 - Toda información pública debe indicar fuente y verificación.
 
-## Excepción: ubicación exacta de personas atrapadas
+## Ubicación: difuminado por defecto, exacta a discreción del usuario
 
-Los reportes de tipo `trapped_person` exponen su **ubicación exacta** en el mapa
-de rescate (`GET /api/trapped-persons`), no difuminada. Es una decisión de
-producto deliberada: es una emergencia de vida y los servicios de rescate
-necesitan el sitio preciso; una ubicación aproximada a ~1 km es inútil para
-acudir.
+Por defecto, las coordenadas de un reporte ciudadano se **difuminan a una rejilla
+de ~110 m** en el servidor (`roundToGrid`, `apps/api/src/lib/geo.ts`) **antes de
+persistirse**. Así nunca guardamos la posición exacta de quien no la consintió.
 
-Implicaciones aceptadas:
+Al reportar, el formulario ofrece una casilla **"Mostrar mi ubicación exacta"**
+(`locationPrecision: "exact"`). Solo en ese caso se guarda y se publica la
+coordenada precisa. Está pensada para emergencias de vida (persona atrapada),
+donde los servicios de rescate necesitan el sitio exacto y una zona de ~110 m no
+basta para acudir. El formulario explica la diferencia y deja la decisión al
+reportante.
+
+Implicaciones aceptadas cuando el usuario elige exacta:
 
 - La ubicación exacta es pública, incluso para reportes aún sin verificar.
-- Riesgo conocido: un reporte falso o malicioso publica un pin exacto sobre una
-  dirección real. Mitigaciones posibles a futuro: exigir verificación de
-  moderador antes de revelar el pin, rate-limit más estricto para
-  `trapped_person`, o difuminar solo para el público y dar exacto vía token de
-  moderación.
+- Riesgo conocido: un reporte falso o malicioso podría publicar un pin exacto
+  sobre una dirección real. Mitigaciones posibles a futuro: exigir verificación
+  de moderador antes de revelar el pin, rate-limit más estricto para
+  `trapped_person`, o servir exacto solo vía token de moderación.
 - Sigue sin exponerse nombre ni contacto privado del reporte.
 
-El resto de entidades (recursos, necesidades, otros reportes) mantiene la regla
-de ubicación aproximada.
+El marcador del mapa (`TrappedPersonMarkerDTO`) incluye `locationPrecision` para
+que la UI comunique si el pin es exacto o aproximado. El resto de entidades
+(recursos, necesidades, otros reportes) no expone coordenadas de personas.
 
 ## DTO público
 
