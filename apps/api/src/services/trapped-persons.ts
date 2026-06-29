@@ -3,13 +3,14 @@ import type { TrappedPersonMarkerDTO } from "@sismicaid/shared";
 import { prisma } from "../db";
 import type { CitizenReport } from "../generated/prisma";
 
-// DTO de mapa: coordenadas EXACTAS (es una emergencia y rescate necesita el
-// sitio preciso), sin nombres ni campos privados.
+// DTO de mapa: coordenadas tal cual se guardaron (exactas si el reportante lo
+// eligió, difuminadas a ~110 m en caso contrario). Sin nombres ni campos privados.
 export function toMarkerDTO(r: CitizenReport): TrappedPersonMarkerDTO {
   return {
     id: r.id,
     lat: r.latitude == null ? null : (r.latitude as number),
     lng: r.longitude == null ? null : (r.longitude as number),
+    locationPrecision: r.locationPrecision,
     municipality: r.municipality,
     urgency: r.urgency,
     verificationStatus: r.verificationStatus,

@@ -3,6 +3,7 @@ import { REPORT_TYPE, URGENCY } from "@sismicaid/shared";
 import { prisma } from "../db";
 import type { CitizenReport } from "../generated/prisma";
 import type { CreateReportParsed } from "../validation/report";
+import { roundToGrid } from "../lib/geo";
 
 // DTO público seguro: NO expone privateContact, descripción, coordenadas ni
 // evidencia (SECURITY_AND_PRIVACY.md). El tipo CitizenReportDTO ya lo garantiza.
@@ -56,6 +57,12 @@ export async function listReports(f: ReportFilters): Promise<CitizenReportDTO[]>
 }
 
 export async function createReport(input: CreateReportParsed): Promise<CitizenReportDTO> {
+  // Privacidad por defecto: salvo que el usuario elija "exact", difuminamos las
+  // coordenadas a ~110 m ANTES de persistir, así nunca guardamos la posición
+  // exacta de quien no la consintió (SECURITY_AND_PRIVACY.md).
+  const blur = input.locationPrecision !== "exact";
+  const latitude = input.latitude == null ? null : blur ? roundToGrid(input.latitude) : input.latitude;
+  const longitude = input.longitude == null ? null : blur ? roundToGrid(input.longitude) : input.longitude;
   const r = await prisma.citizenReport.create({
     data: {
       reportType: input.reportType,
@@ -64,8 +71,8 @@ export async function createReport(input: CreateReportParsed): Promise<CitizenRe
       state: input.state,
       municipality: input.municipality ?? null,
       parish: input.parish ?? null,
-      latitude: input.latitude ?? null,
-      longitude: input.longitude ?? null,
+      latitude,
+      longitude,
       locationPrecision: input.locationPrecision,
       urgency: input.urgency,
       evidenceUrl: input.evidenceUrl ?? null,

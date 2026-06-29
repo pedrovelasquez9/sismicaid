@@ -27,8 +27,10 @@
       if (m.lat == null || m.lng == null) continue; // sin coords: solo en lista
       const color = URGENCY_HEX[m.urgency];
       const unverified = m.verificationStatus !== "verified";
+      // Exacta: punto preciso. Aproximada: zona ~110 m (cubre el difuminado).
+      const radius = m.locationPrecision === "exact" ? 90 : 150;
       const circle = leaflet.circle([m.lat, m.lng], {
-        radius: 120, // metros: marca el sitio exacto del reporte, no una zona
+        radius,
         color,
         fillColor: color,
         fillOpacity: m.resolved ? 0.08 : 0.25,

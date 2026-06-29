@@ -37,11 +37,14 @@
   let evidenceUrl = "";
   let privateContact = "";
 
-  // Ubicación aproximada (opt-in). Sin coords, un reporte de persona atrapada
-  // no puede pintarse en el mapa de rescate.
+  // Ubicación (opt-in). Sin coords, un reporte de persona atrapada no puede
+  // pintarse en el mapa de rescate.
   let lat: number | null = null;
   let lng: number | null = null;
   let geoState: "idle" | "loading" | "ok" | "denied" = "idle";
+  // Precisión a discreción del usuario. Por defecto aproximada (el servidor
+  // difumina a ~110 m); si la activa, se publica la ubicación exacta.
+  let exactLocation = false;
 
   async function useMyLocation() {
     geoState = "loading";
@@ -94,9 +97,9 @@
       parish: parish.trim() || undefined,
       latitude: lat ?? undefined,
       longitude: lng ?? undefined,
-      // Ubicación siempre aproximada en MVP: no publicamos direcciones exactas.
-      // El servidor difumina las coordenadas a una rejilla de ~1 km.
-      locationPrecision: "approximate",
+      // El usuario elige: exacta (se publica tal cual) o aproximada (el servidor
+      // difumina a ~110 m antes de guardar). Sin coords, da igual: aproximada.
+      locationPrecision: lat != null && exactLocation ? "exact" : "approximate",
       urgency: urgency as Urgency,
       evidenceUrl: evidenceUrl.trim() || undefined,
       reportSourceType: reportSourceType as ReportSourceType,
@@ -133,6 +136,7 @@
     reportSourceType = "";
     lat = lng = null;
     geoState = "idle";
+    exactLocation = false;
     attempted = {};
     result = null;
     errorMsg = null;
@@ -201,13 +205,29 @@
           {geoState === "loading" ? "Obteniendo ubicación..." : geoState === "ok" ? "Ubicación añadida ✓" : "Usar mi ubicación actual"}
         </button>
         {#if geoState === "ok"}
-          <p class="note">Se usará tu ubicación aproximada (difuminada a ~1 km) para mostrar el reporte en el mapa de rescate.</p>
+          <label class="exact-toggle">
+            <input type="checkbox" bind:checked={exactLocation} />
+            <span>Mostrar mi ubicación exacta en el mapa</span>
+          </label>
+          {#if exactLocation}
+            <p class="note">
+              <strong>Exacta:</strong> se publica el punto preciso. Úsala en emergencias
+              de vida (persona atrapada) para que rescate llegue al sitio. Tu ubicación
+              exacta será visible públicamente, incluso antes de verificarse.
+            </p>
+          {:else}
+            <p class="note">
+              <strong>Aproximada (recomendada):</strong> el servidor difumina tu
+              ubicación a ~110 m antes de publicarla. Protege tu privacidad; el mapa
+              muestra la zona, no tu punto exacto.
+            </p>
+          {/if}
         {:else if geoState === "denied"}
           <p class="note">No se pudo obtener la ubicación. El reporte se enviará igual, pero no aparecerá en el mapa.</p>
         {/if}
       </div>
 
-      <p class="note">La ubicación se publica como aproximada. No incluyas direcciones privadas exactas.</p>
+      <p class="note">No incluyas direcciones privadas exactas en el texto del reporte.</p>
     </fieldset>
   {:else if step === 3}
     <fieldset>
@@ -399,6 +419,19 @@
   }
   .geo:disabled {
     opacity: 0.6;
+  }
+  .exact-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+    font-size: var(--font-sm);
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+  .exact-toggle input {
+    width: 1.1rem;
+    height: 1.1rem;
   }
   .note {
     font-size: var(--font-xs);
