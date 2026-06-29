@@ -23,7 +23,8 @@
 
   function estado(m: TrappedPersonMarkerDTO): string {
     if (m.resolved) return "Rescatado";
-    return m.verificationStatus === "verified" ? "Verificado" : "Sin verificar";
+    const base = m.verificationStatus === "verified" ? "Verificado" : "Sin verificar";
+    return m.lat == null ? `${base} · Sin ubicación en mapa` : base;
   }
 
   onMount(async () => {
@@ -37,7 +38,7 @@
 </script>
 
 <p class="notice">
-  Reportes ciudadanos sin verificar. Ubicación aproximada por seguridad. No incluye nombres.
+  Reportes ciudadanos, muchos sin verificar. La ubicación es la indicada en el reporte, para que rescate pueda acudir. No incluye nombres.
 </p>
 
 {#if fromCache}

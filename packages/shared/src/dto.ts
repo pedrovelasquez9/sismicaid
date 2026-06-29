@@ -159,12 +159,15 @@ export interface CitizenReportDTO {
   createdAt: string;
 }
 
-// Marcador de mapa de rescate. NO expone coordenadas exactas: approxLat/approxLng
-// vienen redondeadas a rejilla (~1 km) por el servidor. Nunca nombres ni contacto.
+// Marcador de mapa de rescate. Expone coordenadas EXACTAS a propósito: es una
+// emergencia y los rescatistas necesitan el sitio preciso (decisión de producto
+// que sobre-escribe el difuminado de privacidad). Nunca nombres ni contacto.
 export interface TrappedPersonMarkerDTO {
   id: string;
-  approxLat: number;
-  approxLng: number;
+  // null cuando el reporte no trae coordenadas: aparece en la lista pero no
+  // se pinta en el mapa (no inventamos ubicación).
+  lat: number | null;
+  lng: number | null;
   municipality: string | null;
   urgency: Urgency;
   verificationStatus: ReportVerificationStatus;

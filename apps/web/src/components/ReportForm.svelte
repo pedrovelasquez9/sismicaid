@@ -6,6 +6,7 @@
   import { VENEZUELA_STATES } from "../lib/venezuela";
   import { REPORT_CATEGORIES } from "../lib/reportGroups";
   import { REPORT_TYPE_LABEL } from "../lib/labels";
+  import { getCurrentLocation } from "../lib/geolocation";
 
   const URGENCIES: Array<{ value: Urgency; label: string }> = [
     { value: "low", label: "Baja" },
@@ -35,6 +36,25 @@
   let reportSourceType: ReportSourceType | "" = "";
   let evidenceUrl = "";
   let privateContact = "";
+
+  // Ubicación aproximada (opt-in). Sin coords, un reporte de persona atrapada
+  // no puede pintarse en el mapa de rescate.
+  let lat: number | null = null;
+  let lng: number | null = null;
+  let geoState: "idle" | "loading" | "ok" | "denied" = "idle";
+
+  async function useMyLocation() {
+    geoState = "loading";
+    const c = await getCurrentLocation();
+    if (c) {
+      lat = c.lat;
+      lng = c.lng;
+      geoState = "ok";
+    } else {
+      lat = lng = null;
+      geoState = "denied";
+    }
+  }
 
   // Marca si el usuario ya intentó avanzar desde cada paso (para mostrar errores).
   let attempted: Record<number, boolean> = {};
@@ -72,7 +92,10 @@
       state,
       municipality: municipality.trim() || undefined,
       parish: parish.trim() || undefined,
+      latitude: lat ?? undefined,
+      longitude: lng ?? undefined,
       // Ubicación siempre aproximada en MVP: no publicamos direcciones exactas.
+      // El servidor difumina las coordenadas a una rejilla de ~1 km.
       locationPrecision: "approximate",
       urgency: urgency as Urgency,
       evidenceUrl: evidenceUrl.trim() || undefined,
@@ -108,6 +131,8 @@
     state = municipality = parish = title = description = evidenceUrl = privateContact = "";
     urgency = "";
     reportSourceType = "";
+    lat = lng = null;
+    geoState = "idle";
     attempted = {};
     result = null;
     errorMsg = null;
@@ -169,6 +194,19 @@
       {#if attempted[2] && !state}<p class="error">Selecciona un estado.</p>{/if}
       <label><span class="lbl">Municipio <span class="opt-tag">opcional</span></span><input type="text" bind:value={municipality} maxlength="80" /></label>
       <label><span class="lbl">Parroquia <span class="opt-tag">opcional</span></span><input type="text" bind:value={parish} maxlength="80" /></label>
+
+      <div class="field">
+        <span class="lbl">Ubicación en el mapa <span class="opt-tag">opcional</span></span>
+        <button type="button" class="geo" on:click={useMyLocation} disabled={geoState === "loading"}>
+          {geoState === "loading" ? "Obteniendo ubicación..." : geoState === "ok" ? "Ubicación añadida ✓" : "Usar mi ubicación actual"}
+        </button>
+        {#if geoState === "ok"}
+          <p class="note">Se usará tu ubicación aproximada (difuminada a ~1 km) para mostrar el reporte en el mapa de rescate.</p>
+        {:else if geoState === "denied"}
+          <p class="note">No se pudo obtener la ubicación. El reporte se enviará igual, pero no aparecerá en el mapa.</p>
+        {/if}
+      </div>
+
       <p class="note">La ubicación se publica como aproximada. No incluyas direcciones privadas exactas.</p>
     </fieldset>
   {:else if step === 3}
@@ -215,6 +253,11 @@
         <div><dt>Urgencia</dt><dd>{URGENCIES.find((u) => u.value === urgency)?.label ?? "—"}</dd></div>
       </dl>
       <p class="note">Se publicará de inmediato como ciudadano/no verificado. No publiques datos personales de terceros.</p>
+      <p class="disclaimer">
+        Los datos que registras son tu responsabilidad y se publican tal cual,
+        incluida la ubicación. Reporta <strong>solo emergencias reales</strong>:
+        un reporte falso desvía a los rescatistas de quien sí lo necesita.
+      </p>
       {#if errorMsg}<p class="error">{errorMsg}</p>{/if}
     </fieldset>
   {/if}
@@ -344,6 +387,19 @@
   .invalid {
     border-color: var(--color-danger);
   }
+  .geo {
+    min-height: 44px;
+    padding: var(--space-3);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    border-radius: var(--radius-md);
+    font: inherit;
+    cursor: pointer;
+  }
+  .geo:disabled {
+    opacity: 0.6;
+  }
   .note {
     font-size: var(--font-xs);
     color: var(--color-text-soft);
@@ -352,6 +408,15 @@
   .error {
     color: var(--color-danger);
     font-size: var(--font-sm);
+    margin: 0;
+  }
+  .disclaimer {
+    background: var(--color-surface);
+    border-left: 4px solid var(--color-warning);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    font-size: var(--font-sm);
+    color: var(--color-text-muted);
     margin: 0;
   }
   .review {
