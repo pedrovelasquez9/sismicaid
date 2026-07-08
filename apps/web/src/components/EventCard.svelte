@@ -8,8 +8,12 @@
 
   $: color = SEVERITY_COLOR[magnitudeSeverity(event.magnitude)];
   $: mag = event.magnitude != null ? event.magnitude.toFixed(1) : "—";
-  // Hora local VET viene como "YYYY-MM-DDTHH:mm:ss" (sin Z). Mostramos HH:mm.
+  // Hora local VET viene como "YYYY-MM-DDTHH:mm:ss" (sin Z). Mostramos fecha y hora.
   $: localTime = event.eventTimeLocal ? event.eventTimeLocal.slice(11, 16) : null;
+  // "YYYY-MM-DD" -> "DD/MM/YYYY" para el historial.
+  $: localDate = event.eventTimeLocal
+    ? event.eventTimeLocal.slice(0, 10).split("-").reverse().join("/")
+    : null;
 </script>
 
 <article class="card">
@@ -19,7 +23,7 @@
   <div class="body">
     <p class="place">{event.place || "Ubicación no especificada"}</p>
     <p class="meta">
-      {#if localTime}{localTime} VET · {/if}Prof. {event.depthKm != null ? `${event.depthKm} km` : "—"}
+      {#if localDate}{localDate}, {/if}{#if localTime}{localTime} VET · {/if}Prof. {event.depthKm != null ? `${event.depthKm} km` : "—"}
       {#if event.mmi != null}· Intensidad estimada {event.mmi}{/if}
     </p>
     <div class="badges">

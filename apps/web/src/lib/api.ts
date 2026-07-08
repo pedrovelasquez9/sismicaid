@@ -10,7 +10,8 @@ import type {
 } from "@sismicaid/shared";
 
 // URL del backend. Configurable con PUBLIC_API_URL (expuesta al cliente por Vite).
-const API_URL = (import.meta.env.PUBLIC_API_URL as string | undefined) ?? "http://localhost:3000";
+// `import.meta.env` solo existe bajo Vite; el `?? {}` evita romper fuera de él.
+const API_URL = ((import.meta.env as Record<string, string> | undefined)?.PUBLIC_API_URL) ?? "http://localhost:3000";
 
 // status 0 = fallo de red (sin respuesta); >0 = respuesta HTTP de error.
 export class ApiError extends Error {
