@@ -401,3 +401,132 @@ model FetchRun {
   @@index([jobName])
   @@map("fetch_runs")
 }
+
+// ============================================================
+// Sprint 1  Enterprise Foundation
+// audit log, anti-abuse, push subscriptions, safety check, outbox
+// Added: 2026-06-26
+// ============================================================
+model AuditLog {
+  id           BigInt   @id @default(autoincrement())
+  occurredAt   DateTime @default(now()) @db.Timestamptz(6)
+  eventType    String   @db.VarChar(64) // p.ej. "report.created"
+  actorType    String   @db.VarChar(32) // "anonymous" | "device" | "moderator" | "system"
+  actorRef     String?  @db.VarChar(128) // device hash, system job name, etc. NUNCA PII directo
+  resourceType String   @db.VarChar(32) // "report" | "aid" | "safety_check" | ...
+  resourceId   String   @db.VarChar(64) // ULID o id externo
+  payload      Json // payload canónico (claves ordenadas)
+  prevHash     String   @db.Char(64) // hex sha256 del bloque anterior
+  hash         String   @unique @db.Char(64) // hex sha256 de este bloque
+  chainId      String   @default("default") @db.VarChar(32) // permite sellar chain y abrir nuevo
+
+  @@index([resourceType, resourceId])
+  @@index([occurredAt])
+  @@index([eventType, occurredAt])
+  @@index([chainId, id]) // recorrido secuencial
+  @@map("audit_log")
+}
+
+model ReporterReputation {
+  deviceKey          String    @id @db.Char(64) // sha256(salt || device_fingerprint)
+  score              Int       @default(50) // 0–100
+  reportsTotal       Int       @default(0)
+  reportsVerified    Int       @default(0)
+  reportsQuarantined Int       @default(0)
+  firstSeenAt        DateTime  @default(now()) @db.Timestamptz(6)
+  lastSeenAt         DateTime  @default(now()) @db.Timestamptz(6)
+  blockedAt          DateTime? @db.Timestamptz(6) // null = activo
+  blockedReason      String?   @db.VarChar(256)
+
+  @@index([score])
+  @@index([blockedAt])
+  @@map("reporter_reputation")
+}
+
+model DedupSignature {
+  signature String   @id @db.Char(64)
+  reportId  String   @db.VarChar(64)
+  count     Int      @default(1)
+  firstSeen DateTime @default(now()) @db.Timestamptz(6)
+  lastSeen  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([reportId])
+  @@index([lastSeen])
+  @@map("dedup_signature")
+}
+
+model PushSubscription {
+  id            String    @id @default(cuid())
+  endpoint      String    @unique @db.Text // URL del push service (FCM/Mozilla/Apple)
+  p256dh        String    @db.Text // clave pública del cliente
+  auth          String    @db.Text // auth secret del cliente
+  // Scope geográfico — qué áreas le interesan al usuario:
+  geoScope      Json // { state?: string, h3_cells?: string[] }
+  // Topics:
+  topicSismos   Boolean   @default(true)
+  topicTsunami  Boolean   @default(true)
+  topicAyuda    Boolean   @default(false)
+  // Higiene:
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  lastActiveAt  DateTime  @default(now()) @db.Timestamptz(6)
+  failuresCount Int       @default(0) // tras N fallos consecutivos -> retirar
+  retiredAt     DateTime? @db.Timestamptz(6)
+
+  @@index([retiredAt])
+  @@index([lastActiveAt])
+  @@map("push_subscription")
+}
+
+model NotificationOutbox {
+  id          BigInt    @id @default(autoincrement())
+  channel     String    @db.VarChar(16) // "push" | "sms" | "webhook"
+  payload     Json
+  scopeKey    String    @db.VarChar(128) // ej. "state:caracas" o "subscriber:xyz"
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  pickedAt    DateTime? @db.Timestamptz(6)
+  deliveredAt DateTime? @db.Timestamptz(6)
+  failedAt    DateTime? @db.Timestamptz(6)
+  attempts    Int       @default(0)
+  lastError   String?   @db.Text
+  // Dedup: igual scope_key + payload_hash en ventana corta = mismo envío
+  payloadHash String    @db.Char(64)
+
+  @@index([deliveredAt, pickedAt]) // worker: pick non-delivered & non-picked
+  @@index([scopeKey, payloadHash, createdAt]) // dedup
+  @@map("notification_outbox")
+}
+
+model SafetyCheckCampaign {
+  id              String    @id @default(cuid())
+  triggerEventId  String    @db.VarChar(64) // referencia al evento USGS
+  startedAt       DateTime  @default(now()) @db.Timestamptz(6)
+  expiresAt       DateTime  @db.Timestamptz(6) // típicamente +72h
+  // Área de impacto donde se solicita check:
+  affectedH3Cells String[] // celdas H3 r6 afectadas
+  closedAt        DateTime? @db.Timestamptz(6)
+
+  responses SafetyCheckResponse[]
+
+  @@index([startedAt])
+  @@map("safety_check_campaign")
+}
+
+model SafetyCheckResponse {
+  id            String              @id @default(cuid())
+  campaignId    String
+  campaign      SafetyCheckCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  deviceKey     String              @db.Char(64) // anónimo, mismo que reputation
+  status        String              @db.VarChar(16) // "safe" | "need_help"
+  // Ubicación aprox del responder (k-anonymity garantizado al agregar):
+  h3Cell        String              @db.VarChar(16) // r9 (~150m)
+  // Triage médico opcional para need_help (START):
+  triageColor   String?             @db.VarChar(8) // "red" | "yellow" | "green" | "black"
+  notesRedacted String?             @db.VarChar(280) // texto libre limitado, sin PII según política
+  createdAt     DateTime            @default(now()) @db.Timestamptz(6)
+  expiresAt     DateTime            @db.Timestamptz(6)
+
+  @@unique([campaignId, deviceKey]) // una respuesta por device por campaign
+  @@index([campaignId, status])
+  @@index([h3Cell, campaignId])
+  @@map("safety_check_response")
+}

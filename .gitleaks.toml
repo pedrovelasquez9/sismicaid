@@ -1,0 +1,41 @@
+# gitleaks config  SismicAid
+# Sprint 1 base config: hereda reglas por defecto y aplica allowlist permisiva
+# para reducir falsos positivos en CI sin debilitar las detecciones críticas.
+#
+# Para endurecer: ajustar `[allowlist]` o agregar `[[rules]]` específicas.
+
+title = "SismicAid gitleaks config"
+
+# Heredar el set de reglas por defecto (AWS, GitHub, Stripe, Slack, JWT, etc.)
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Falsos positivos comunes en este repo"
+
+# Paths que no se escanean (artifacts y datos derivados, NO código de producción)
+paths = [
+  '''pnpm-lock\.yaml''',
+  '''(?i).*\.lock''',
+  '''node_modules/''',
+  '''dist/''',
+  '''\.next/''',
+  '''apps/api/src/generated/''',
+  '''apps/api/prisma/migrations/''',
+  '''(?i).*\.test\.ts''',
+  '''(?i).*\.spec\.ts'''
+]
+
+# Regex de strings que aparecen legítimamente como ejemplos en docs/configs
+regexes = [
+  # DATABASE_URL en .env.example
+  '''postgres(ql)?://sismicaid:sismicaid_ci@localhost:5432''',
+  # Placeholders típicos
+  '''(?i)example[_-]?(secret|token|key|password)''',
+  '''(?i)<your[-_].*[-_]here>''',
+  '''(?i)dummy(_|:|=).*''',
+]
+
+# Commits a ignorar (vacío por ahora; agregar SHAs si llegan a haber falsos positivos
+# históricos que no podamos rebasear)
+commits = []

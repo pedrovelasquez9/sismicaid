@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+# Cancel in-progress runs for the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Quality checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sismicaid
+          POSTGRES_PASSWORD: sismicaid_ci
+          POSTGRES_DB: sismicaid_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sismicaid"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://sismicaid:sismicaid_ci@localhost:5432/sismicaid_test
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @sismicaid/api exec prisma generate
+
+      - name: Apply migrations (test DB)
+        run: pnpm --filter @sismicaid/api exec prisma migrate deploy
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm --filter @sismicaid/api test
+
+      - name: Build
+        run: pnpm build
+
+      - name: Verify no uncommitted changes after build
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Build produced uncommitted changes:"
+            git status --short
+            exit 1
+          fi
